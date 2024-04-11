@@ -2,6 +2,9 @@
 This file contains several utility functions used to define the main training loop. It 
 mainly consists of functions to assist with logging, rollouts, and the @run_epoch function,
 which is the core training logic for models in this repository.
+此文件包含一些用于定义主训练循环的工具函数。
+主要包括用于加载数据、日志和rollout的辅助函数。
+NOTE 复制自robomimic/robomimic/utils/train_utils.py，但移除了run_epoch等函数。
 """
 import os
 import os
@@ -83,6 +86,7 @@ def get_exp_dir(config, auto_remove_exp_dir=False):
 def load_data_for_training(config, obs_keys):
     """
     Data loading at the start of an algorithm.
+    算法开始时的数据加载
 
     Args:
         config (BaseConfig instance): config object
@@ -95,12 +99,14 @@ def load_data_for_training(config, obs_keys):
     """
 
     # config can contain an attribute to filter on
+    # 配置可以包含一个要过滤的属性
     train_filter_by_attribute = config.train.hdf5_filter_key
     valid_filter_by_attribute = config.train.hdf5_validation_filter_key
     if valid_filter_by_attribute is not None:
         assert config.experiment.validate, "specified validation filter key {}, but config.experiment.validate is not set".format(valid_filter_by_attribute)
 
     # load the dataset into memory
+    # 将数据集加载到内存中
     if config.experiment.validate:
         assert not config.train.hdf5_normalize_obs, "no support for observation normalization with validation data yet"
         assert (train_filter_by_attribute is not None) and (valid_filter_by_attribute is not None), \
@@ -128,6 +134,7 @@ def load_data_for_training(config, obs_keys):
 def dataset_factory(config, obs_keys, filter_by_attribute=None, dataset_path=None):
     """
     Create a PlaydataSequenceDataset instance to pass to a torch DataLoader.
+    创建一个PlaydataSequenceDataset实例以传递给torch DataLoader
 
     Args:
         config (BaseConfig instance): config object
@@ -180,6 +187,7 @@ def run_rollout(
     ):
     """
     Runs a rollout in an environment with the current network parameters.
+    使用当前网络参数在环境中运行一次rollout
 
     Args:
         policy (RolloutPolicy instance): policy to use for rollouts.
@@ -282,9 +290,11 @@ def rollout_with_stats(
     """
     A helper function used in the train loop to conduct evaluation rollouts per environment
     and summarize the results.
+    在训练循环中使用的辅助函数，用于在每个环境中进行评估rollout并总结结果
 
     Can specify @video_dir (to dump a video per environment) or @video_path (to dump a single video
     for all environments).
+    可以指定@video_dir（为每个环境转储一个视频）或@video_path（为所有环境转储一个视频）
 
     Args:
         policy (RolloutPolicy instance): policy to use for rollouts.

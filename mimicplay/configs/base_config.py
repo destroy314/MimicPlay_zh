@@ -2,6 +2,8 @@
 The base config class that is used for all algorithm configs in this repository.
 Subclasses get registered into a global dictionary, making it easy to instantiate
 the correct config class given the algorithm name.
+被本仓库中所有算法配置使用的基础配置类。
+子类被注册到全局字典中，使得可以根据给出的算法名称轻松实例化当前配置类。
 """
 
 import six # preserve metaclass compatibility between python 2 and 3
@@ -11,12 +13,14 @@ import robomimic
 from mimicplay.configs.config import Config
 
 # global dictionary for remembering name - class mappings
+# 用于保存名称-类映射的全局字典
 REGISTERED_CONFIGS = {}
 
 
 def get_all_registered_configs():
     """
     Give access to dictionary of all registered configs for external use.
+    为外部使用提供所有已注册配置的字典访问。
     """
     return deepcopy(REGISTERED_CONFIGS)
 
@@ -25,6 +29,7 @@ def config_factory(algo_name, dic=None):
     """
     Creates an instance of a config from the algo name. Optionally pass
     a dictionary to instantiate the config from the dictionary.
+    从算法名称创建配置的实例。可选择传递一个字典来从字典实例化配置。
     """
     if algo_name not in REGISTERED_CONFIGS:
         raise Exception("Config for algo name {} not found. Make sure it is a registered config among: {}".format(
@@ -36,6 +41,7 @@ class ConfigMeta(type):
     """
     Define a metaclass for constructing a config class.
     It registers configs into the global registry.
+    定义一个用于构造配置类的元类。它将配置注册到全局注册表中。
     """
     def __new__(meta, name, bases, class_dict):
         cls = super(ConfigMeta, meta).__new__(meta, name, bases, class_dict)
@@ -64,6 +70,7 @@ class BaseConfig(Config):
 
         # After Config init, new keys cannot be added to the config, except under nested
         # attributes that have called @do_not_lock_keys
+        # 在Config初始化之后，不能向配置添加新键，除非在调用了@do_not_lock_keys的嵌套属性下
         self.lock_keys()
 
     @property
@@ -79,6 +86,9 @@ class BaseConfig(Config):
         whether to do logging, whether to save models (and how often), whether to render 
         videos, and whether to do rollouts (and how often). This class has a default 
         implementation that usually doesn't need to be overriden.
+        此函数填充配置的`config.experiment`属性，该属性具有几个实验设置，例如训练运行的名称，
+        是否进行日志记录，是否保存模型（以及多久保存一次），是否渲染视频以及是否进行rollouts（以及多久进行一次）。
+        此类有通常不需要覆盖的默认实现。
         """
 
         self.experiment.name = "test"                               # name of experiment used to make log files
@@ -128,6 +138,8 @@ class BaseConfig(Config):
         has several settings related to the training process, such as the dataset 
         to use for training, and how the data loader should load the data. This 
         class has a default implementation that usually doesn't need to be overriden.
+        此函数填充配置的`config.train`属性，该属性具有与训练过程相关的几个设置，例如用于训练的数据集以及数据加载器应如何加载数据。
+        此类有通常不需要覆盖的默认实现。
         """
 
         # Path to hdf5 dataset to use for training
@@ -203,6 +215,8 @@ class BaseConfig(Config):
         argument to the constructor. Any parameter that an algorithm needs to determine its 
         training and test-time behavior should be populated here. This function should be 
         implemented by every subclass.
+        此函数填充配置的`config.algo`属性，并通过构造函数的`algo_config`参数提供给每个算法的`Algo`子类（参见`algo/algo.py`）。
+        任何算法需要确定其训练和测试时行为的参数都应在此处填充。每个子类都应实现此函数。
         """
         pass
 
@@ -216,6 +230,9 @@ class BaseConfig(Config):
         default implementation that usually doesn't need to be overriden, certain algorithm 
         configs may choose to, in order to have seperate configs for different networks 
         in the algorithm. 
+        此函数填充配置的`config.observation`属性，并通过构造函数的`obs_config`参数提供给每个算法的`Algo`子类（参见`algo/algo.py`）。
+        此配置的此部分用于指定网络训练应使用哪些观察模态，以及网络应如何对观察模态进行编码。
+        虽然此类有通常不需要覆盖的默认实现，但某些算法配置可能会选择这样做，以便为算法中的不同网络提供单独的配置。
         """
 
         # observation modalities
@@ -279,6 +296,9 @@ class BaseConfig(Config):
         It contains hyperparameter keys and values, which are populated automatically
         by the hyperparameter config generator (see `utils/hyperparam_utils.py`).
         These values are read by the wandb logger (see `utils/log_utils.py`) to set job tags.
+        此函数填充配置的`config.meta`属性。配置的这一部分主要用于指定超参数扫描的作业信息。
+        它包含超参数键和值，这些值由超参数配置生成器（请参见`utils/hyperparam_utils.py`）自动填充。
+        这些值由wandb记录器（请参见`utils/log_utils.py`）读取，以设置作业标签。
         """
         
         self.meta.hp_base_config_file = None            # base config file in hyperparam sweep
@@ -288,6 +308,7 @@ class BaseConfig(Config):
     @property
     def use_goals(self):
         # whether the agent is goal-conditioned
+        # 代理是否以目标为条件
         return len([obs_key for modality in self.observation.modalities.goal.values() for obs_key in modality]) > 0
 
     @property
@@ -295,6 +316,7 @@ class BaseConfig(Config):
         """
         This grabs the union of observation keys over all modalities (e.g.: low_dim, rgb, depth, etc.) and over all
         modality groups (e.g: obs, goal, subgoal, etc...)
+        此函数获取所有模态（例如：low_dim、rgb、depth等）和所有模态组（例如：obs、goal、subgoal等）中的观察键的并集。
 
         Returns:
             n-array: all observation keys used for this model

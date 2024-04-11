@@ -28,6 +28,9 @@ class PlaydataSequenceDataset(SequenceDataset):
         """
         Dataset class for fetching sequences of experience.
         Length of the fetched sequence is equal to (@frame_stack - 1 + @seq_length)
+        用于获取经验序列的数据集类。
+        获取的序列的长度等于（@frame_stack - 1 + @seq_length）
+        NOTE SequenceDataset.load_demo_info中将h5文件中的所有序列拼接到了一起，总长度为self.total_num_sequences
 
         Args:
             hdf5_path (str): path to hdf5
@@ -69,6 +72,7 @@ class PlaydataSequenceDataset(SequenceDataset):
 
             filter_by_attribute (str): if provided, use the provided filter key to look up a subset of
                 demonstrations to load
+            如果提供，则使用提供的过滤键查找要加载的演示的子集
 
             load_next_obs (bool): whether to load next_obs from the dataset
         """
@@ -148,6 +152,7 @@ class PlaydataSequenceDataset(SequenceDataset):
     def get_item(self, index):
         """
         Main implementation of getitem when not using cache.
+        不使用缓存时的getitem的主要实现。
         """
 
         demo_id = self._index_to_demo_id[index]

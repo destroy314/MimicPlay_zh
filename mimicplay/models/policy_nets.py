@@ -5,6 +5,8 @@ such as subgoal or goal dictionaries) and produce action predictions,
 samples, or distributions as outputs. Note that actions
 are assumed to lie in [-1, 1], and most networks will have a final
 tanh activation to help ensure this range.
+包含用于策略网络的torch模块。这些网络以观察字典作为输入（可能还包括其他条件，如子目标或目标字典），
+并产生动作预测、样本或分布作为输出。请注意，动作假设在[-1, 1]范围内，并且大多数网络将具有最终的tanh激活以确保此范围。
 """
 import textwrap
 import numpy as np
@@ -29,6 +31,7 @@ class ActorNetwork(MIMO_MLP):
     """
     A basic policy network that predicts actions from observations.
     Can optionally be goal conditioned on future observations.
+    一个基本的策略网络，从观察中预测动作。可以选择使用未来的观察作为目标条件。
     """
     def __init__(
         self,
@@ -42,17 +45,23 @@ class ActorNetwork(MIMO_MLP):
         Args:
             obs_shapes (OrderedDict): a dictionary that maps observation keys to
                 expected shapes for observations.
+            将观察键映射到观察的预期形状的字典。
 
             ac_dim (int): dimension of action space.
+            动作空间的维度。
 
             mlp_layer_dims ([int]): sequence of integers for the MLP hidden layers sizes.
+            MLP隐藏层大小的整数序列。
 
             goal_shapes (OrderedDict): a dictionary that maps observation keys to
                 expected shapes for goal observations.
+            将观察键映射到目标观察的预期形状的字典。
 
             encoder_kwargs (dict or None): If None, results in default encoder_kwargs being applied. Otherwise, should
                 be nested dictionary containing relevant per-observation key information for encoder networks.
                 Should be of form:
+            如果为None，则应用默认的encoder_kwargs。否则，应该是一个嵌套字典，包含编码器网络的相关模态信息。
+            应该具有以下格式：
 
                 obs_modality1: dict
                     feature_dimension: int
@@ -97,6 +106,7 @@ class ActorNetwork(MIMO_MLP):
         Allow subclasses to re-define outputs from @MIMO_MLP, since we won't
         always directly predict actions, but may instead predict the parameters
         of a action distribution.
+        允许子类重新定义@MIMO_MLP的输出，因为我们不总是直接预测动作，而是可能预测动作分布的参数。
         """
         return OrderedDict(action=(self.ac_dim,))
 
@@ -116,6 +126,7 @@ class GMMActorNetwork(ActorNetwork):
     """
     Variant of actor network that learns a multimodal Gaussian mixture distribution
     over actions.
+    学习动作的多模态高斯混合分布的actor网络的变体。
     """
     def __init__(
         self,
@@ -285,6 +296,7 @@ class GMMActorNetwork(ActorNetwork):
 class RNNGMMActorNetwork(RNNActorNetwork):
     """
     An RNN GMM policy network that predicts sequences of action distributions from observation sequences.
+    从观察序列预测动作分布的RNN GMM策略网络。
     """
 
     def __init__(

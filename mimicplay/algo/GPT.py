@@ -1,5 +1,6 @@
 """
 A transformer policy model modified from GPT transformer architecture
+修改自GPT transformer架构的transformer策略模型
 References:
 1) the official GPT-2 TensorFlow implementation released by OpenAI:
 https://github.com/openai/gpt-2/blob/master/src/model.py
@@ -433,6 +434,7 @@ class SpatialSoftmax(torch.nn.Module):
 class GPT_wrapper_scratch(nn.Module):
     """
     GPT policy takes goal image as input (used for BC-trans baseline, which learns from play data in an end-to-end fashion)
+    GPT策略模型，接收目标图像（用于BC-transformer基线策略，该策略从play数据中以端到端的方式学习）
     """
 
     def __init__(self, feat_dim, n_layer, n_head, block_size, gmm_modes, action_dim, proprio_dim,
@@ -681,6 +683,7 @@ class GPT_wrapper_scratch(nn.Module):
 class GPT_wrapper(nn.Module):
     """
     GPT policy that takes latent plans from the learned highlevel planner (used for MimicPlay, which learns a plan-guided lowlevel robot controller)
+    GPT策略模型，接收高级规划器的潜空间计划（用于MimicPlay，该策略学习了计划引导的低级机器人控制器）
     """
 
     def __init__(self, feat_dim, n_layer, n_head, block_size, gmm_modes, action_dim, proprio_dim,

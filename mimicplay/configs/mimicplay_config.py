@@ -1,5 +1,6 @@
 """
 Config for MimicPlay algorithm.
+MimicPlay算法的配置。
 """
 
 from mimicplay.configs.base_config import BaseConfig
@@ -11,6 +12,7 @@ class MimicPlayConfig(BaseConfig):
     def train_config(self):
         """
         MimicPlay doesn't need "next_obs" from hdf5 - so save on storage and compute by disabling it.
+        MimicPlay 不需要来自hdf5的“next_obs” - 因此通过禁用它来节省存储和计算。
         """
         super(MimicPlayConfig, self).train_config()
         self.train.hdf5_load_next_obs = False
@@ -21,9 +23,12 @@ class MimicPlayConfig(BaseConfig):
         `Algo` subclass (see `algo/algo.py`) for each algorithm through the `algo_config` 
         argument to the constructor. Any parameter that an algorithm needs to determine its 
         training and test-time behavior should be populated here.
+        此函数填充配置的`config.algo`属性，并通过构造函数的`algo_config`参数提供给每个算法的`Algo`子类（请参见`algo/algo.py`）。
+        任何算法需要确定其训练和测试时行为的参数都应在此处填充。每个子类都应实现此函数。
         """
 
         # optimization parameters
+        # 优化器参数
         self.algo.optim_params.policy.optimizer_type = "adam"
         self.algo.optim_params.policy.learning_rate.initial = 1e-4      # policy learning rate
         self.algo.optim_params.policy.learning_rate.decay_factor = 0.1  # factor to decay LR by (if epoch schedule non-empty)
@@ -32,14 +37,17 @@ class MimicPlayConfig(BaseConfig):
         self.algo.optim_params.policy.regularization.L2 = 0.00          # L2 regularization strength
 
         # loss weights
+        # 损失权重
         self.algo.loss.l2_weight = 1.0      # L2 loss weight
         self.algo.loss.l1_weight = 0.0      # L1 loss weight
         self.algo.loss.cos_weight = 0.0     # cosine loss weight
 
         # MLP network architecture (layers after observation encoder and RNN, if present)
+        # MLP网络架构（观察编码器和RNN之后的层，如果存在）
         self.algo.actor_layer_dims = (1024, 1024)
 
         # stochastic Gaussian policy settings
+        # 随机高斯策略设置
         self.algo.gaussian.enabled = False              # whether to train a Gaussian policy
         self.algo.gaussian.fixed_std = False            # whether to train std output or keep it constant
         self.algo.gaussian.init_std = 0.1               # initial standard deviation (or constant)
@@ -48,6 +56,7 @@ class MimicPlayConfig(BaseConfig):
         self.algo.gaussian.low_noise_eval = True        # low-std at test-time 
 
         # stochastic GMM policy settings
+        # 随机GMM策略设置
         self.algo.gmm.enabled = False                   # whether to train a GMM policy
         self.algo.gmm.num_modes = 5                     # number of GMM modes
         self.algo.gmm.min_std = 0.0001                  # minimum std output from network
@@ -55,16 +64,19 @@ class MimicPlayConfig(BaseConfig):
         self.algo.gmm.low_noise_eval = True             # low-std at test-time 
 
         # stochastic VAE policy settings
+        # 随机VAE策略设置
         self.algo.vae.enabled = False                   # whether to train a VAE policy
         self.algo.vae.latent_dim = 14                   # VAE latent dimnsion - set to twice the dimensionality of action space
         self.algo.vae.latent_clip = None                # clip latent space when decoding (set to None to disable)
         self.algo.vae.kl_weight = 1.                    # beta-VAE weight to scale KL loss relative to reconstruction loss in ELBO
 
         # VAE decoder settings
+        # VAE解码器设置
         self.algo.vae.decoder.is_conditioned = True                         # whether decoder should condition on observation
         self.algo.vae.decoder.reconstruction_sum_across_elements = False    # sum instead of mean for reconstruction loss
 
         # VAE prior settings
+        # VAE先验设置
         self.algo.vae.prior.learn = False                                   # learn Gaussian / GMM prior instead of N(0, 1)
         self.algo.vae.prior.is_conditioned = False                          # whether to condition prior on observations
         self.algo.vae.prior.use_gmm = False                                 # whether to use GMM prior
@@ -82,6 +94,7 @@ class MimicPlayConfig(BaseConfig):
         self.algo.vae.prior_layer_dims = (300, 400)                         # prior MLP layer dimensions (if learning conditioned prior)
 
         # RNN policy settings
+        # RNN策略设置
         self.algo.rnn.enabled = False                               # whether to train RNN policy
         self.algo.rnn.horizon = 10                                  # unroll length for RNN - should usually match train.seq_length
         self.algo.rnn.hidden_dim = 400                              # hidden dimension size
@@ -92,12 +105,14 @@ class MimicPlayConfig(BaseConfig):
         self.algo.rnn.kwargs.do_not_lock_keys()
 
         # GMM highlevel polict settings
+        # GMM高级策略设置
         self.algo.highlevel.enabled = False                     # whether to train the highlevel planner of MimicPlay
         self.algo.highlevel.ac_dim = 30                         # 3D trajectory output dimension (3 x 10 points = 30)
         self.algo.highlevel.latent_plan_dim = 400               # latent plan embedding size
         self.algo.highlevel.do_not_lock_keys()
 
         # GPT lowlevel policy settings
+        # GPT低级策略设置
         self.algo.lowlevel.enabled = False                      # whether to train the lowlevel guided policy of MimicPlay (if highlevel is not enabled, an end-to-end lowlevel policy will be trained (BC-transformer baseline))
         self.algo.lowlevel.feat_dim = 656                       # feature dimansion of transformer
         self.algo.lowlevel.n_layer = 4                          # number of layers in transformer
@@ -115,6 +130,7 @@ class MimicPlayConfig(BaseConfig):
         self.algo.lowlevel.do_not_lock_keys()
 
         # Playdata training/inference settings
+        # Playdata训练/推理设置
         self.algo.playdata.enable = False                       # whether to train with plan data (unlabeled, no-cut)
         self.algo.playdata.goal_image_range = [100, 200]        # goal image sampling range during training
         self.algo.playdata.eval_goal_gap = 150                  # goal image sampling gap during evaluation rollouts (mid of training goal_image_range)

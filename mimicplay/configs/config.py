@@ -3,6 +3,7 @@ Basic config class - provides a convenient way to work with nested
 dictionaries (by exposing keys as attributes) and to save / load from jsons.
 
 Based on addict: https://github.com/mewwts/addict
+基本配置类 - 提供操作嵌套字典（通过暴露键为属性）和存取为json的方便手段
 """
 
 import json
@@ -38,6 +39,7 @@ class Config(dict):
         """
         Lock the config. Afterwards, new keys cannot be added to the
         config, and the values of existing keys cannot be modified.
+        锁定配置。之后无法向配置添加新键，并且无法修改现有键的值。
         """
         object.__setattr__(self, '__all_locked', True)
         if self.key_lockable:
@@ -139,6 +141,7 @@ class Config(dict):
     def lock_keys(self):
         """
         Lock this config so that new keys cannot be added.
+        锁定此配置使得无法添加新键。
         """
         if not self.key_lockable:
             return

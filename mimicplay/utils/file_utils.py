@@ -1,6 +1,7 @@
 """
 A collection of utility functions for working with files, such as reading metadata from
 demonstration datasets, loading model checkpoints, or downloading dataset files.
+用于处理文件的实用程序函数集，例如从演示数据集中读取元数据、加载模型检查点或下载数据集文件。
 """
 import os
 import h5py

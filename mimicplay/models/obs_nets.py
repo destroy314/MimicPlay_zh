@@ -6,6 +6,9 @@ observation keys of a certain modality and shape.
 
 As an example, an observation could consist of a flat "robot0_eef_pos" observation key,
 and a 3-channel RGB "agentview_image" observation key.
+包含了一些用于处理由多个模态组成的输入的torch模块。当网络需要处理一个或多个观测字典时，这是非常常见的情况，其中每个输入字典可以具有特定模态和形状的观测键。
+
+例如，一个观测可以由一个平的"robot0_eef_pos"观测键和一个3通道RGB的"agentview_image"观测键组成。
 """
 import sys
 import numpy as np
@@ -34,17 +37,22 @@ def obs_encoder_factory(
     ):
     """
     Utility function to create an @ObservationEncoder from kwargs specified in config.
+    从配置中的kwargs创建一个@ObservationEncoder的实用函数。
 
     Args:
         obs_shapes (OrderedDict): a dictionary that maps observation key to
             expected shapes for observations.
+        一个将观察键映射到观察期望形状的字典。
 
         feature_activation: non-linearity to apply after each obs net - defaults to ReLU. Pass
             None to apply no activation.
+        每个观察网络后应用的非线性，默认为ReLU。传递None表示不应用激活函数。
 
         encoder_kwargs (dict or None): If None, results in default encoder_kwargs being applied. Otherwise, should be
             nested dictionary containing relevant per-modality information for encoder networks.
             Should be of form:
+        如果为None，则应用默认的encoder_kwargs。否则，应该是一个嵌套字典，包含编码器网络的相关模态信息。
+            应该具有以下格式：
 
             obs_modality1: dict
                 feature_dimension: int
@@ -102,12 +110,15 @@ class ObservationEncoder(Module):
     observation keys together. Each key is processed with an encoder head network.
     Call @register_obs_key to register observation keys with the encoder and then
     finally call @make to create the encoder networks.
+    一个模块，通过观察键处理输入，然后将处理后的观察键连接在一起。每个键都是用一个编码器头网络处理的。
+    调用@register_obs_key注册观察键到编码器，最后调用@make创建编码器网络。
     """
     def __init__(self, feature_activation=nn.ReLU):
         """
         Args:
             feature_activation: non-linearity to apply after each obs net - defaults to ReLU. Pass
                 None to apply no activation.
+            每个观察网络后应用的非线性，默认为ReLU。传递None表示不应用激活函数。
         """
         super(ObservationEncoder, self).__init__()
         self.obs_shapes = OrderedDict()
@@ -131,21 +142,30 @@ class ObservationEncoder(Module):
     ):
         """
         Register an observation key that this encoder should be responsible for.
+        注册这个编码器应该负责的观察键。
 
         Args:
             name (str): modality name
+            模态名
             shape (int tuple): shape of modality
+            模态的形状
             net_class (str): name of class in base_nets.py that should be used
                 to process this observation key before concatenation. Pass None to flatten
                 and concatenate the observation key directly.
+            应该用来处理这个观察键的类的名称，这个类应该在base_nets.py中。传递None来直接展平并连接观察键。
             net_kwargs (dict): arguments to pass to @net_class
+            传递给@net_class的参数
             net (Module instance): if provided, use this Module to process the observation key
                 instead of creating a different net
+            如果提供，使用这个模块来处理观察键，而不是创建一个不同的网络
             randomizer (Randomizer instance): if provided, use this Module to augment observation keys
                 coming in to the encoder, and possibly augment the processed output as well
+            如果提供，使用这个模块来增强传给编码器的观察键，可能也增强处理后的输出
             share_net_from (str): if provided, use the same instance of @net_class
                 as another observation key. This observation key must already exist in this encoder.
                 Warning: Note that this does not share the observation key randomizer
+                如果提供，使用@net_class的相同实例作为另一个观察键的实例。这个观察键必须已经存在于这个编码器中。
+                警告：请注意，这不会共享观察键随机化器
         """
         assert not self._locked, "ObservationEncoder: @register_obs_key called after @make"
         assert name not in self.obs_shapes, "ObservationEncoder: modality {} already exists".format(name)
@@ -177,6 +197,7 @@ class ObservationEncoder(Module):
     def make(self):
         """
         Creates the encoder networks and locks the encoder so that more modalities cannot be added.
+        创建编码器网络并锁定编码器，以防止添加更多的模态。
         """
         assert not self._locked, "ObservationEncoder: @make called more than once"
         self._create_layers()
@@ -185,15 +206,18 @@ class ObservationEncoder(Module):
     def _create_layers(self):
         """
         Creates all networks and layers required by this encoder using the registered modalities.
+        使用注册的模态创建所有编码器需要的网络和层。
         """
         assert not self._locked, "ObservationEncoder: layers have already been created"
 
         for k in self.obs_shapes:
             if self.obs_nets_classes[k] is not None:
                 # create net to process this modality
+                # 创建处理该模态的网络
                 self.obs_nets[k] = ObsUtils.OBS_ENCODER_CORES[self.obs_nets_classes[k]](**self.obs_nets_kwargs[k])
             elif self.obs_share_mods[k] is not None:
                 # make sure net is shared with another modality
+                # 确保网络与另一个模态共享
                 self.obs_nets[k] = self.obs_nets[self.obs_share_mods[k]]
 
         self.activation = None
@@ -206,48 +230,62 @@ class ObservationEncoder(Module):
         modality, it is processed with a randomizer (if present), an encoder
         network (if present), and again with the randomizer (if present), flattened,
         and then concatenated with the other processed modalities.
+        根据self.obs_shapes中的顺序，对每个模态进行处理。
+        对于每个模态，首先使用随机器（如果存在），然后使用编码器网络（如果存在）进行处理，
+        再次使用随机器（如果存在）进行处理，最后将处理后的模态展平并与其他处理后的模态进行拼接。
 
         Args:
             obs_dict (OrderedDict): dictionary that maps modalities to torch.Tensor
                 batches that agree with @self.obs_shapes. All modalities in
                 @self.obs_shapes must be present, but additional modalities
                 can also be present.
+            将模态映射到与self.obs_shapes相符的torch.Tensor批的字典。
+                obs_dict中必须包含self.obs_shapes中的所有模态，但也可以包含其他模态。
 
         Returns:
             feats (torch.Tensor): flat features of shape [B, D]
+            形状为[B, D]的扁平特征
         """
         assert self._locked, "ObservationEncoder: @make has not been called yet"
 
         # ensure all modalities that the encoder handles are present
+        # 确保编码器处理的所有模态都存在
         assert set(self.obs_shapes.keys()).issubset(obs_dict), "ObservationEncoder: {} does not contain all modalities {}".format(
             list(obs_dict.keys()), list(self.obs_shapes.keys())
         )
 
         # process modalities by order given by @self.obs_shapes
+        # 按self.obs_shapes给定的顺序处理模态
         feats = []
         for k in self.obs_shapes:
             x = obs_dict[k]
             # maybe process encoder input with randomizer
+            # 可能使用随机器处理编码器的输入
             if self.obs_randomizers[k] is not None:
                 x = self.obs_randomizers[k].forward_in(x)
             # maybe process with obs net
+            # 可能使用obs网络进行处理
             if self.obs_nets[k] is not None:
                 x = self.obs_nets[k](x)
                 if self.activation is not None:
                     x = self.activation(x)
             # maybe process encoder output with randomizer
+            # 可能使用随机器处理编码器的输出
             if self.obs_randomizers[k] is not None:
                 x = self.obs_randomizers[k].forward_out(x)
             # flatten to [B, D]
+            # 展平为[B, D]
             x = TensorUtils.flatten(x, begin_axis=1)
             feats.append(x)
 
         # concatenate all features together
+        # 将所有特征拼接在一起
         return torch.cat(feats, dim=-1)
 
     def output_shape(self, input_shape=None):
         """
         Compute the output shape of the encoder.
+        计算编码器的输出形状。
         """
         feat_dim = 0
         for k in self.obs_shapes:
@@ -264,6 +302,7 @@ class ObservationEncoder(Module):
     def __repr__(self):
         """
         Pretty print the encoder.
+        美观打印编码器。
         """
         header = '{}'.format(str(self.__class__.__name__))
         msg = ''
@@ -288,6 +327,8 @@ class ObservationDecoder(Module):
     is generated with a linear layer from these flat inputs. Subclass this
     module in order to implement more complex schemes for generating each
     modality.
+    一个模块，可以通过模态生成观测输出。假设输入是平的（通常是从某个隐藏层输出的）。
+    每个观测输出都是通过一个线性层从这些平的输入生成的。子类化这个模块以实现更复杂的方案来生成每个模态。
     """
     def __init__(
         self,
@@ -298,9 +339,9 @@ class ObservationDecoder(Module):
         Args:
             decode_shapes (OrderedDict): a dictionary that maps observation key to
                 expected shape. This is used to generate output modalities from the
-                input features.
+                input features.映射观测键到期望形状的字典。这用于从输入特征生成输出模态。
 
-            input_feat_dim (int): flat input dimension size
+            input_feat_dim (int): 平的输入维度大小
         """
         super(ObservationDecoder, self).__init__()
 

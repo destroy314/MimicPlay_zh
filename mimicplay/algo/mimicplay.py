@@ -1,5 +1,6 @@
 """
 Implementation of MimicPlay and PlayLMP baselines (formalized as BC-RNN (robomimic) and BC-trans)
+实现MimicPlay和PlayLMP基线（作为BC-RNN（robomimic）和BC-transformer）
 """
 from collections import OrderedDict
 
@@ -22,13 +23,17 @@ from robomimic.algo.bc import BC_Gaussian, BC_RNN
 def algo_config_to_class(algo_config):
     """
     Maps algo config to the MimicPlay algo class to instantiate, along with additional algo kwargs.
+    映射算法配置到MimicPlay算法类以及额外的算法kwargs来实例化。
 
     Args:
         algo_config (Config instance): algo config
+        算法配置
 
     Returns:
         algo_class: subclass of Algo
+        Algo的子类
         algo_kwargs (dict): dictionary of additional kwargs to pass to algorithm
+        要传给算法的额外关键词参数的字典
     """
 
     if algo_config.highlevel.enabled:
@@ -45,10 +50,12 @@ def algo_config_to_class(algo_config):
 class Highlevel_GMM_pretrain(BC_Gaussian):
     """
     MimicPlay highlevel latent planner, trained to generate 3D trajectory based on observation and goal image.
+    MimicPlay高级潜空间规划器，训练以生成基于观察和目标图像的3D轨迹。
     """
     def _create_networks(self):
         """
         Creates networks and places them into @self.nets.
+        创建网络并将其放入@self.nets中。
         """
         assert self.algo_config.highlevel.enabled
         assert not self.algo_config.lowlevel.enabled
@@ -77,6 +84,7 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         """
         Processes input batch from a data loader to filter out
         relevant information and prepare the batch for training.
+        处理用于训练的输入批，以过滤相关信息并准备批以进行训练。
 
         Args:
             batch (dict): dictionary with torch.Tensors sampled
@@ -88,26 +96,31 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         """
 
         # ensure obs_normalization_stats are torch Tensors on proper device
+        # 确保obs_normalization_stats是适当设备上的torch张量
         obs_normalization_stats = TensorUtils.to_float(
             TensorUtils.to_device(TensorUtils.to_tensor(obs_normalization_stats), self.device))
 
         # we will search the nested batch dictionary for the following special batch dict keys
         # and apply the processing function to their values (which correspond to observations)
+        # 我们将搜索嵌套的批字典以查找以下特殊批字典键，并将处理函数应用于其值（对应于观察）
         obs_keys = ["obs", "next_obs", "goal_obs"]
 
         def recurse_helper(d):
             """
             Apply process_obs_dict to values in nested dictionary d that match a key in obs_keys.
+            将process_obs_dict应用于与obs_keys中的键匹配的嵌套字典d中的值。
             """
             for k in d:
                 if k in obs_keys:
                     # found key - stop search and process observation
+                    # 找到键 - 停止搜索并处理观察
                     if d[k] is not None:
                         d[k] = ObsUtils.process_obs_dict(d[k])
                         if obs_normalization_stats is not None:
                             d[k] = ObsUtils.normalize_obs(d[k], obs_normalization_stats=obs_normalization_stats)
                 elif isinstance(d[k], dict):
                     # search down into dictionary
+                    # 搜索到字典内部
                     recurse_helper(d[k])
 
         recurse_helper(batch)
@@ -117,7 +130,7 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         return TensorUtils.to_device(TensorUtils.to_float(batch), self.device)
 
     def _get_latent_plan(self, obs, goal):
-        assert 'agentview_image' in obs.keys() # only visual inputs can generate latent plans
+        assert 'agentview_image' in obs.keys() # only visual inputs can generate latent plans  只有视觉输入才能生成潜在计划
 
         if len(obs['agentview_image'].size()) == 5:
             bs, seq, c, h, w = obs['agentview_image'].size()
@@ -163,6 +176,7 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         """
         Internal helper function for BC algo class. Compute forward pass
         and return network outputs in @predictions dict.
+        内部辅助函数，用于BC算法类。计算前向传递并在@predictions字典中返回网络输出。
 
         Args:
             batch (dict): dictionary with torch.Tensors sampled
@@ -179,6 +193,7 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
 
         # make sure that this is a batch of multivariate action distributions, so that
         # the log probability computation will be correct
+        # 确保这是一批多变量动作分布，以便对数概率计算正确
         assert len(dists.batch_shape) == 1
         log_probs = dists.log_prob(batch["obs"]["robot0_eef_pos_future_traj"])
 
@@ -230,6 +245,7 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
 class Lowlevel_GPT_mimicplay(BC_RNN):
     """
     MimicPlay lowlevel plan-guided robot controller, trained to output 6-DoF robot end-effector actions conditioned on generated highlevel latent plans
+    MimicPlay低级计划指导的机器人控制器，训练为以生成的高级潜空间计划为条件输出6-DoF机器人末端效应器动作；包含一个训练好的高级规划器
     """
     def _create_networks(self):
         """
@@ -316,11 +332,15 @@ class Lowlevel_GPT_mimicplay(BC_RNN):
         """
         Internal helper function for BC algo class. Compute forward pass
         and return network outputs in @predictions dict.
+        用于BC算法类的内部辅助函数。计算前向传递并在@predictions字典中返回网络输出。
+
         Args:
             batch (dict): dictionary with torch.Tensors sampled
                 from a data loader and filtered by @process_batch_for_training
+            从数据加载器中采样的包含torch.Tensors的字典，并通过@process_batch_for_training进行过滤
         Returns:
             predictions (dict): dictionary containing network outputs
+            包含网络输出的字典
         """
 
         with torch.no_grad():
@@ -331,6 +351,7 @@ class Lowlevel_GPT_mimicplay(BC_RNN):
 
         # make sure that this is a batch of multivariate action distributions, so that
         # the log probability computation will be correct
+        # 确保这是一批多变量动作分布，以便对数概率计算正确
         assert len(dists.batch_shape) == 2 # [B, T]
         log_probs = dists.log_prob(batch["actions"])
 
@@ -413,6 +434,7 @@ class Lowlevel_GPT_mimicplay(BC_RNN):
 class Baseline_GPT_from_scratch(BC_RNN):
     """
     BC transformer baseline (an end-to-end version of MimicPlay's lowlevel robot controller (no highlevel planner)).
+    BC transformer基线（MimicPlay的低级机器人控制器的端到端版本（没有高级规划器））
     """
 
     def _create_networks(self):
@@ -581,6 +603,7 @@ class Baseline_GPT_from_scratch(BC_RNN):
 class BC_RNN_GMM(BC_RNN):
     """
     BC-RNN baseline (an end-to-end baseline adapted from robomimic)
+    BC-RNN基线（从robomimic调整而来的端到端基线）
     """
     def _create_networks(self):
         """

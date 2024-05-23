@@ -5,12 +5,13 @@ import cv2
 view_id = 1 # change to 2 if drawing on second view
 
 
-with h5py.File('demo_hand_loc_1_new.hdf5', 'r') as f:
+# with h5py.File('demo_hand_loc_1_new.hdf5', 'r') as f:
+with h5py.File('ours_cube_hand_loc.hdf5', 'r') as f:
     images = np.array(f['data/demo_0/obs/front_image_{}'.format(view_id)])
     actions = np.array(f['data/demo_0/actions'])
 
 # Reshape the actions to [145, 10, 4]
-actions = actions.reshape((145, 10, 4))
+actions = actions.reshape((2999, 10, 4))
 
 if view_id == 1:
     actions = actions[:, :, :2]
@@ -19,7 +20,7 @@ else:
 
 
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video = cv2.VideoWriter('output.mp4', fourcc, 30.0, (120, 120))
+video = cv2.VideoWriter('output.mp4', fourcc, 30.0, (128, 128))
 
 for i in range(images.shape[0]):
     img = images[i].copy()

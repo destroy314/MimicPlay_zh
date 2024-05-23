@@ -89,7 +89,8 @@ def train(config, device):
     # load basic metadata from training file
     # 从训练文件中加载基本元数据
     print("\n============= Loaded Environment Metadata =============")
-    env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data)
+    # env_meta = FileUtils.get_env_metadata_from_dataset(dataset_path=config.train.data)
+    env_meta=None
     shape_meta = FileUtils.get_shape_metadata_from_dataset(
         dataset_path=config.train.data,
         all_obs_keys=config.all_obs_keys,
@@ -413,10 +414,11 @@ def main(args):
     # catch error during training and print it
     # 捕获训练期间的错误并打印
     res_str = "finished run successfully!"
-    try:
-        train(config, device=device)
-    except Exception as e:
-        res_str = "run failed with error:\n{}\n\n{}".format(e, traceback.format_exc())
+    # try:
+        # train(config, device=device)
+    # except Exception as e:
+    #     res_str = "run failed with error:\n{}\n\n{}".format(e, traceback.format_exc())
+    train(config, device=device)
     print(res_str)
 
 

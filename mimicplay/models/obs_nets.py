@@ -339,9 +339,11 @@ class ObservationDecoder(Module):
         Args:
             decode_shapes (OrderedDict): a dictionary that maps observation key to
                 expected shape. This is used to generate output modalities from the
-                input features.映射观测键到期望形状的字典。这用于从输入特征生成输出模态。
+                input features.
+            映射观测键到期望形状的字典。这用于从输入特征生成输出模态。
 
-            input_feat_dim (int): 平的输入维度大小
+            input_feat_dim (int): flat input dimension size
+            平的输入维度大小
         """
         super(ObservationDecoder, self).__init__()
 
@@ -405,6 +407,12 @@ class ObservationGroupEncoder(Module):
     Each key corresponds to a observation group (e.g. 'obs', 'subgoal', 'goal')
     and each OrderedDict should be a map between modalities and
     expected input shapes (e.g. { 'image' : (3, 120, 160) }).
+    这个类允许网络将多个观测字典编码为单个扁平的连接向量表示。
+    它通过为每个观测字典（观测组）分配一个@ObservationEncoder对象来实现这一点。
+
+    该类接受一个字典的字典，@observation_group_shapes。
+    每个键对应一个观测组（例如'obs'，'subgoal'，'goal'），每个OrderedDict应该是模态和
+    期望的输入形状之间的映射（例如{'image'：（3，120，160）}）。
     """
     def __init__(
         self,
@@ -522,6 +530,11 @@ class MIMO_MLP(Module):
     the flat encodings with the other flat inputs. The default behavior for generating 
     outputs is to use a linear layer branch to produce each modality separately
     (including visual outputs).
+    扩展到MLP以接受多个观测字典作为输入，并输出张量字典。输入被指定为观测字典的字典，每个键对应一个观测组。
+
+    该模块利用@ObservationGroupEncoder处理多个输入字典和@ObservationDecoder生成张量字典。
+    默认行为是使用学习的CNN处理视觉输入并将平的编码与其他平的输入连接起来。
+    生成输出的默认行为是使用线性层分支分别生成每个模态（包括视觉输出）。
     """
     def __init__(
         self,

@@ -1,34 +1,56 @@
 """
+The main script for evaluating a policy in an environment.
 用于在环境中评估策略的主要脚本。
 
-参数:
-    agent (str): 保存的检查点pth文件的路径
+Args:
+    agent (str): path to saved checkpoint pth file
+    保存的检查点pth文件的路径
 
-    horizon (int): 如果提供，将覆盖检查点中rollout时的的最大长度
+    horizon (int): if provided, override maximum horizon of rollout from the one 
+        in the checkpoint
+    如果提供，将覆盖检查点中rollout时的的最大长度
 
-    env (str): 如果提供，将覆盖检查点中的环境名称，并在rollout中使用
+    env (str): if provided, override name of env from the one in the checkpoint,
+        and use it for rollouts
+    如果提供，将覆盖检查点中的环境名称，并在rollout中使用
 
-    render (bool): 如果提供标志，使用屏幕渲染进行rollout
+    render (bool): if flag is provided, use on-screen rendering during rollouts
+    如果传递，使用屏幕渲染进行rollout
 
-    video_path (str): 如果提供，将轨迹渲染到此视频文件路径
+    video_path (str): if provided, render trajectories to this video file path
+    如果提供，将轨迹渲染到此视频文件路径
 
-    video_skip (int): 每@video_skip步将帧渲染到视频中
+    video_skip (int): render frames to a video every @video_skip steps
+    每@video_skip步将帧渲染到视频中
 
-    camera_names (str or [str]): 用于渲染到屏幕或视频的摄像头名称
+    camera_names (str or [str]): camera name(s) to use for rendering on-screen or to video
+    用于渲染到屏幕或视频的摄像头名称
 
-    dataset_path (str): 如果提供，将在此路径下写入一个hdf5文件，其中包含rollout数据
+    dataset_path (str): if provided, an hdf5 file will be written at this path with the
+        rollout data
+    如果提供，将在此路径下写入一个hdf5文件，其中包含rollout数据
 
-    dataset_obs (bool): 如果为真，并且提供了@dataset_path，则在输出的数据集hdf5文件中包含可能的高维观测值（默认情况下，观测值被排除在外，只保存模拟器状态）
+    dataset_obs (bool): if flag is provided, and @dataset_path is provided, include 
+        possible high-dimensional observations in output dataset hdf5 file (by default,
+        observations are excluded and only simulator states are saved).
+    如果为真，并且提供了@dataset_path，则在输出的数据集hdf5文件中包含可能的高维观测值（默认情况下，观测值被排除在外，只保存模拟器状态）
 
-    seed (int): 如果提供，设置rollout的种子
+    seed (int): if provided, set seed for rollouts
+    如果提供，设置rollout的种子
 
-    bddl_file (str): 如果提供，任务的目标将指定为bddl文件中的符号目标（使用AND / OR连接的多个符号谓词）
+    bddl_file (str): if provided, the task's goal is specified as the symbolic goal in the
+         bddl file (several symbolic predicates connected with AND / OR)
+    如果提供，任务的目标将指定为bddl文件中的符号目标（使用AND / OR连接的多个符号谓词）
 
-    video_prompt (str): 如果提供，将加载任务视频提示并在评估rollout中使用
+    video_prompt (str): if provided, a task video prompt is loaded and used in the
+         evaluation rollouts
+    如果提供，将加载任务视频提示并在评估rollout中使用
 
 
-示例用法:
+Example usage:
 
+    # Evaluate a policy with 100 rollouts of maximum horizon 2000 and save the rollouts to a video.
+    # Visualize the agentview and wrist cameras during the rollout.
     # 使用100个最大长度为2000的rollout评估一个策略，并将所有rollout保存到视频中。
     # 在rollout期间可视化代理视角和腕部摄像头。
 

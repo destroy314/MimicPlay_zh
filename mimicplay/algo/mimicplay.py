@@ -60,7 +60,8 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         assert self.algo_config.highlevel.enabled
         assert not self.algo_config.lowlevel.enabled
 
-        del self.obs_shapes['robot0_eef_pos_future_traj']
+        # del self.obs_shapes['robot0_eef_pos_future_traj']
+        del self.obs_shapes['hand_loc_future_traj']
         self.ac_dim = self.algo_config.highlevel.ac_dim
 
         self.nets = nn.ModuleDict()
@@ -125,7 +126,9 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
 
         recurse_helper(batch)
 
-        batch["goal_obs"]["agentview_image"] = batch["goal_obs"]["agentview_image"][:, 0]
+        # batch["goal_obs"]["agentview_image"] = batch["goal_obs"]["agentview_image"][:, 0]
+        batch["goal_obs"]["front_image_1"] = batch["goal_obs"]["front_image_1"][:, 0]
+        batch["goal_obs"]["front_image_2"] = batch["goal_obs"]["front_image_2"][:, 0]
 
         return TensorUtils.to_device(TensorUtils.to_float(batch), self.device)
 
@@ -195,7 +198,8 @@ class Highlevel_GMM_pretrain(BC_Gaussian):
         # the log probability computation will be correct
         # 确保这是一批多变量动作分布，以便对数概率计算正确
         assert len(dists.batch_shape) == 1
-        log_probs = dists.log_prob(batch["obs"]["robot0_eef_pos_future_traj"])
+        # log_probs = dists.log_prob(batch["obs"]["robot0_eef_pos_future_traj"])
+        log_probs = dists.log_prob(batch["obs"]["hand_loc_future_traj"].reshape(-1,40))
 
         predictions = OrderedDict(
             log_probs=log_probs,

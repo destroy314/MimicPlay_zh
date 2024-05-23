@@ -36,13 +36,19 @@ def process_dataset(dataset_file):
 
         for i in range(0, DEMO_COUNT):
             # Extract the robot0_eef_pos data
-            eef_pos = f[f'data/demo_{i}/obs/robot0_eef_pos'][...]
+            # eef_pos = f[f'data/demo_{i}/obs/robot0_eef_pos'][...]
+            eef_pos = f[f'data/demo_{i}/obs/hand_loc'][...]
 
             # Calculate the future trajectory for each data point
             future_traj_data = np.array([get_future_points(eef_pos[j:]) for j in range(len(eef_pos))])
 
             # Create the new dataset
-            f.create_dataset(f'data/demo_{i}/obs/robot0_eef_pos_future_traj', data=future_traj_data)
+            # f.create_dataset(f'data/demo_{i}/obs/robot0_eef_pos_future_traj', data=future_traj_data)
+            f.create_dataset(f'data/demo_{i}/obs/hand_loc_future_traj', data=future_traj_data)
+
+            # Add the 'num_samples' attribute to the demo (for human play data only)
+            print(f"Processed demo {i} with {len(eef_pos)} samples.")
+            f[f'data/demo_{i}'].attrs['num_samples'] = len(eef_pos)-1
 
     print(f"Processed {DEMO_COUNT} demos!")
 
